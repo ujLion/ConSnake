@@ -1,7 +1,9 @@
 #include <iostream>
 #include <stdlib.h>
 #include <conio.h>
-#include <dos.h>
+#include <windows.h>
+#include <chrono>
+#include <thread>
 
 using namespace std;
 
@@ -14,6 +16,7 @@ int compare(int, int);
 void frame();
 void status();
 void clear();
+void gotoxy(short, short);
 
 int dir, x = 0, y = 0, p = rnd(1, 60, 1), q = rnd(1, 25, 1), stage = 1, life = 4, points = 0, speed = 10, width = 1, h[100][2];
 
@@ -25,10 +28,10 @@ int main()
 	do
 	{
 		delay(speed, 0, 0, 0);
-		if (kbhit() != 0)
+		if (_kbhit() != 0)
 		{
-			getch();
-			dir = getch();
+			_getch();
+			dir = _getch();
 		}
 		what(dir);
 		gotoxy(p, q);
@@ -72,9 +75,9 @@ void what(int dir)
 int rnd(int a, int b, int c)
 {
 	int z = a - 1;
-	randomize();
+	srand(12345);
 	for (; z < a || z == c;)
-		z = random(b);
+		z = rand();
 	return z;
 }
 
@@ -94,21 +97,14 @@ int compare(int a, int b)
 	return r;
 }
 
-void delay(unsigned char n, unsigned char s, unsigned char m, unsigned char h)
+void delay(unsigned char hs, unsigned char s, unsigned char m, unsigned char h)
 {
-	struct time t, T;
-	gettime(&t);
-	gettime(&T);
-	t.ti_hour += h;
-	t.ti_min += m;
-	t.ti_sec += s;
-	t.ti_hund += n;
-	while (
-		(T.ti_hour < t.ti_hour) ||
-		(T.ti_hour == t.ti_hour && T.ti_min < t.ti_min) ||
-		(T.ti_hour == t.ti_hour && T.ti_min == t.ti_min && T.ti_sec < t.ti_sec) ||
-		(T.ti_hour == t.ti_hour && T.ti_min == t.ti_min && T.ti_sec == t.ti_sec && T.ti_hund < t.ti_hund))
-		gettime(&T);
+	auto hours = std::chrono::hours(h);
+	auto minutes = std::chrono::minutes(m);
+	auto seconds = std::chrono::seconds(s);
+	auto hsecs = std::chrono::milliseconds(10 * hs);
+
+	std::this_thread::sleep_for(hours + minutes + seconds + hsecs);
 }
 
 void gain()
@@ -151,7 +147,7 @@ void loss()
 
 void frame()
 {
-	clrscr();
+	system("cls");
 	int i;
 	for (i = 0; i < 22; i++)
 		cout << char(-51);
@@ -224,4 +220,9 @@ void clear()
 		for (int j = 0; j < 58; j++)
 			cout << ' ';
 	}
+}
+
+void gotoxy(short x, short y) {
+	COORD coord = { x,y };
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
